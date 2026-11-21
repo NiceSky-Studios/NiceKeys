@@ -57,59 +57,6 @@ NiceKeys checks <https://github.com/NiceSky-Studios/NiceKeys/releases> for a new
   the release page. NiceKeys doesn't install updates silently: you download the new `.dmg` yourself.
 - The only data sent is a standard request to GitHub's public API with a `NiceKeys/<version>` user agent.
 
-## Build from source
-
-Needs macOS 13+ and the Xcode command line tools (`xcode-select --install`). No Xcode project required.
-
-```bash
-cd NiceKeys
-./build.sh              # arm64 + x86_64 + universal .dmg files -> dist/
-```
-
-| Command | Result |
-| --- | --- |
-| `./build.sh` or `./build.sh all` | All three `.dmg` files |
-| `./build.sh arm64` / `x86_64` / `universal` | One `.dmg` |
-| `./build.sh run` | Build and launch for this Mac (no `.dmg`) |
-| `./build.sh cask` | Write `dist/nicekeys.rb`, a Homebrew cask for the universal `.dmg` |
-| `./build.sh clean` | Remove `build/` and `dist/` |
-
-`VERSION=1.3.1 ./build.sh` sets the version in the app and the `.dmg` names. VS Code tasks are included
-(Cmd+Shift+B). If the script isn't executable, run `bash build.sh`.
-
-Rebuilding changes the ad-hoc signature, so macOS may ask you to re-grant Input Monitoring after a rebuild.
-### Signing and notarization
-
-Needs a paid Apple Developer account. NiceKeys can't do this for you, but `build.sh` automates it:
-
-```bash
-# once: store notarization credentials in your keychain
-xcrun notarytool store-credentials nicekeys --apple-id you@example.com --team-id TEAMID
-
-# every release
-SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" NOTARIZE=1 NOTARY_PROFILE=nicekeys ./build.sh
-```
-
-The app and each `.dmg` are signed, submitted to Apple, and the ticket is stapled, so it opens without warnings.
-
-## Publishing a release
-
-The update checker compares the **tag** of the latest GitHub release with the app's version, so tag releases
-as `vMAJOR.MINOR.PATCH` and build with the same number.
-
-```bash
-VERSION=1.3.0 ./build.sh
-gh release create v1.3.0 dist/*.dmg --title "NiceKeys v1.3.0" --notes-file RELEASE_NOTES_v1.3.0.md
-```
-
-`build.sh` defaults to the current version, so plain `./build.sh` already builds 1.3.0.
-
-### Homebrew cask
-
-After building the universal `.dmg` and uploading the release, run `./build.sh cask` and put
-`dist/nicekeys.rb` in a tap (for example `NiceSky-Studios/homebrew-tap`, under `Casks/`). Users then run
-`brew install --cask NiceSky-Studios/tap/nicekeys`.
-
 ## Why it's light
 
 There is no polling and no per-frame redraw. A listen-only event tap wakes the app only for key and
