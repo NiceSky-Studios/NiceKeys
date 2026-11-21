@@ -1,11 +1,11 @@
 # NiceKeys
 
-![version](https://img.shields.io/badge/version-v1.2.0-5AD98C) ![macOS](https://img.shields.io/badge/macOS-13%2B-lightgrey) ![swift](https://img.shields.io/badge/Swift-5.9-orange)
+![version](https://img.shields.io/badge/version-v1.3.0-5AD98C) ![macOS](https://img.shields.io/badge/macOS-13%2B-lightgrey) ![swift](https://img.shields.io/badge/Swift-5.9-orange)
 
-**Current version: v1.2.0**  ([release notes](RELEASE_NOTES_v1.2.0.md), [changelog](#changelog))
+**Current version: v1.3.0**  ([release notes](RELEASE_NOTES_v1.3.0.md), [changelog](#changelog))
 
 A tiny macOS keystroke overlay in the style of Lunar Client's keystrokes mod. Dark, semi-transparent keys
-(WASD, Shift, Space, mouse buttons with clicks per second, and more) float above every app, including
+(WASD, Shift, Space, mouse buttons with clicks per second, scroll wheel, and more) float above every app, including
 full-screen ones. The overlay is click-through, event-driven, and light on CPU, GPU and memory.
 
 Made by [NiceSky Studios](https://github.com/NiceSky-Studios).
@@ -24,9 +24,9 @@ Open the `.dmg`, drag NiceKeys to Applications, and launch it.
 
 ## First launch
 
-1. The hub window opens. macOS asks for **Input Monitoring**: allow NiceKeys in
-   System Settings > Privacy & Security > Input Monitoring.
-2. If the hub still says it needs permission after you allow it, quit and reopen NiceKeys once.
+1. The hub opens with a short walkthrough. macOS asks for **Input Monitoring**: allow NiceKeys in
+   System Settings > Privacy & Security > Input Monitoring. The walkthrough shows when it's granted.
+2. If it still says it needs permission after you allow it, use **Relaunch NiceKeys** (in the walkthrough or General).
 3. The keyboard icon in the menu bar reopens the hub, toggles the overlay, checks for updates, or quits.
 
 Builds are ad-hoc signed. If macOS blocks the first open, right-click the app and choose **Open**, or run:
@@ -39,12 +39,12 @@ xattr -dr com.apple.quarantine /Applications/NiceKeys.app
 
 | Tab | What you can do |
 | --- | --- |
-| **Keys** | Toggle W A S D, Q E R F, Shift / Ctrl / Alt, Space, LMB / RMB (with CPS), hotbar 1-5, arrows. Presets, plus custom keys: press any key to add it. |
-| **Layout** | Drag keys anywhere on a grid to build your own arrangement. Resize keys, rename them, nudge with steppers, snap to grid, and give any key its own colors (for example a green glow on W). The overlay updates live. One click resets to the automatic layout. |
-| **Appearance** | Key size, spacing, corner radius, border, opacity, and colors for idle and pressed keys, with a live preview. Effects: press animation, glow on pressed keys, and fade-out when idle. |
-| **Position** | 9 snap points, drag-to-move mode, sliders, and a display picker for multiple monitors. |
-| **Profiles** | Save complete setups (keys, layout, colors, effects, position), such as "Minecraft", "Recording" and "Minimal", and switch between them here or from the menu bar. |
-| **General** | Global show/hide shortcut (default Control+Option+K), launch at login, update checks, permission status, reset, quit. |
+| **Keys** | Toggle W A S D, Q E R F, Shift / Ctrl / Alt, Space, mouse buttons (left, right, middle, back, forward, with CPS), scroll wheel up/down, hotbar 1-5, arrows. Presets, plus custom keys: press any key to add it. |
+| **Layout** | Drag keys anywhere on a grid to build your own arrangement. Resize keys, rename them, nudge with steppers, snap to grid, and give any key its own colors (for example a green glow on W). The overlay updates live. Shift-click to multi-select and drag a group, nudge with the arrow keys, duplicate, align and distribute, undo and redo (Cmd+Z), and show a per-key press counter. One click resets to the automatic layout. |
+| **Appearance** | Key size, spacing, corner radius, border, opacity, and colors for idle and pressed keys, with a live preview. Built-in themes (NiceKeys Dark, Lunar Glass, Neon Green, Ice Blue, Sunset, Minimal Light) plus theme import/export as JSON. Effects: press animation, glow, a typing and shortcut strip (off by default), and fade-out when idle. |
+| **Position** | 9 snap points, drag-to-move mode, sliders, and a display picker for multiple monitors, including **Follow active display**. |
+| **Profiles** | Save complete setups (keys, layout, colors, effects, position), such as "Minecraft", "Recording" and "Minimal", and switch between them here or from the menu bar. Optionally assign apps to a profile and NiceKeys switches automatically when you focus them. |
+| **General** | Global show/hide shortcut (default Control+Option+K), apps where the overlay is hidden (privacy), launch at login, optional Dock icon, report a bug, update checks, permission status, reset, quit. |
 
 ## Updates
 
@@ -57,14 +57,80 @@ NiceKeys checks <https://github.com/NiceSky-Studios/NiceKeys/releases> for a new
   the release page. NiceKeys doesn't install updates silently: you download the new `.dmg` yourself.
 - The only data sent is a standard request to GitHub's public API with a `NiceKeys/<version>` user agent.
 
+## Build from source
+
+Needs macOS 13+ and the Xcode command line tools (`xcode-select --install`). No Xcode project required.
+
+```bash
+cd NiceKeys
+./build.sh              # arm64 + x86_64 + universal .dmg files -> dist/
+```
+
+| Command | Result |
+| --- | --- |
+| `./build.sh` or `./build.sh all` | All three `.dmg` files |
+| `./build.sh arm64` / `x86_64` / `universal` | One `.dmg` |
+| `./build.sh run` | Build and launch for this Mac (no `.dmg`) |
+| `./build.sh cask` | Write `dist/nicekeys.rb`, a Homebrew cask for the universal `.dmg` |
+| `./build.sh clean` | Remove `build/` and `dist/` |
+
+`VERSION=1.3.1 ./build.sh` sets the version in the app and the `.dmg` names. VS Code tasks are included
+(Cmd+Shift+B). If the script isn't executable, run `bash build.sh`.
+
+Rebuilding changes the ad-hoc signature, so macOS may ask you to re-grant Input Monitoring after a rebuild.
+### Signing and notarization
+
+Needs a paid Apple Developer account. NiceKeys can't do this for you, but `build.sh` automates it:
+
+```bash
+# once: store notarization credentials in your keychain
+xcrun notarytool store-credentials nicekeys --apple-id you@example.com --team-id TEAMID
+
+# every release
+SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" NOTARIZE=1 NOTARY_PROFILE=nicekeys ./build.sh
+```
+
+The app and each `.dmg` are signed, submitted to Apple, and the ticket is stapled, so it opens without warnings.
+
+## Publishing a release
+
+The update checker compares the **tag** of the latest GitHub release with the app's version, so tag releases
+as `vMAJOR.MINOR.PATCH` and build with the same number.
+
+```bash
+VERSION=1.3.0 ./build.sh
+gh release create v1.3.0 dist/*.dmg --title "NiceKeys v1.3.0" --notes-file RELEASE_NOTES_v1.3.0.md
+```
+
+`build.sh` defaults to the current version, so plain `./build.sh` already builds 1.3.0.
+
+### Homebrew cask
+
+After building the universal `.dmg` and uploading the release, run `./build.sh cask` and put
+`dist/nicekeys.rb` in a tap (for example `NiceSky-Studios/homebrew-tap`, under `Casks/`). Users then run
+`brew install --cask NiceSky-Studios/tap/nicekeys`.
+
 ## Why it's light
 
 There is no polling and no per-frame redraw. A listen-only event tap wakes the app only for key and
 mouse-button events, and each event updates just the affected Core Animation layers. Timers are
 rare and short-lived: one for about a second after clicking (CPS), one lazy timer for fade-when-idle if
-you turn it on, and a 0.3s check that runs only while a key is physically held. Closing the hub frees its SwiftUI view tree.
+you turn it on, a 0.3s check that runs only while a key is physically held, a brief pulse timer only while you scroll, and a one-shot timer that clears the typing strip. Scroll events are only subscribed to when a scroll key is enabled, and typed text is only read when the typing strip is on. Per-app features use one notification per app switch, not polling. Closing the hub frees its SwiftUI view tree.
 
 ## Changelog
+
+**v1.3.0**
+- **Per-app profiles**: assign apps to a profile and NiceKeys switches automatically, then switches back.
+- **Hide in specific apps**: a blocklist for password managers, banking apps and anything else private.
+- **Typing and shortcut strip**: optional line above the keys showing recent text and shortcuts like Cmd+Shift+4.
+- **More inputs**: middle click, mouse back/forward buttons, scroll wheel up/down, and optional per-key press counters.
+- **Follow active display** for multi-monitor setups.
+- **Layout editor**: multi-select, undo/redo, arrow-key nudging, duplicate, align and distribute.
+- **Themes**: six built-in themes and import/export of your own.
+- **First-run walkthrough** for the Input Monitoring permission.
+- Optional Dock icon, relaunch button, report-a-bug link.
+- `build.sh`: signing, notarization (`NOTARIZE=1`) and a Homebrew cask generator (`./build.sh cask`).
+- Settings from earlier versions are carried over automatically.
 
 **v1.2.0**
 - **Profiles**: save and switch complete setups from the hub or the menu bar.
